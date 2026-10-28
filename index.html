@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>미래성 공략 작전 · 중앙로켓연구소</title>
+<style>
+  :root{
+    --navy:#1B2A4A; --sky:#EEF4FB; --line:#C9D8EC; --orange:#D9480F; --yellow:#FFD43B;
+    --cream:#FFF4D6; --ink2:#3D4C69; --green:#2B8A3E; --cyan:#63E6BE;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--sky);color:var(--navy);
+    font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+    -webkit-tap-highlight-color:transparent}
+  button{font:inherit;cursor:pointer;border:0}
+  .wrap{max-width:900px;margin:0 auto;padding:14px 12px 24px;min-height:100vh;display:flex;flex-direction:column;gap:12px}
+  header.top{background:var(--navy);color:#fff;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:4px}
+  header.top .lab{color:var(--yellow);font-weight:800;font-size:13px}
+  header.top h1{margin:0;font-size:26px;font-weight:900}
+  header.top p{margin:0;color:#DCE6F5;font-size:14px;line-height:1.5}
+  .card{background:#fff;border:2px solid var(--line);border-radius:18px;padding:16px}
+  .card h2{margin:0 0 10px;font-size:18px}
+  .seg{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  .opt{background:var(--sky);border:2px solid var(--line);border-radius:14px;padding:14px 8px;font-weight:800;font-size:16px;color:var(--navy);min-height:52px}
+  .opt small{display:block;font-weight:500;font-size:12px;color:var(--ink2);margin-top:2px}
+  .opt[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+  .opt[aria-pressed="true"] small{color:#DCE6F5}
+  .big{background:var(--orange);color:#fff;font-weight:900;font-size:20px;border-radius:16px;padding:16px;width:100%;min-height:56px}
+  .ghost{background:#fff;color:var(--navy);border:2px solid var(--navy);font-weight:800;border-radius:14px;padding:12px 16px;min-height:48px}
+  .rules{margin:0;padding-left:20px;font-size:15px;line-height:1.75;color:var(--ink2)}
+  .hide{display:none!important}
+
+  .hud{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  .hud div{background:var(--navy);color:#fff;border-radius:12px;padding:8px 6px;text-align:center;display:flex;flex-direction:column;gap:2px}
+  .hud b{font-size:18px;color:var(--yellow)} .hud span{font-size:11px;color:#DCE6F5}
+  .bar{height:10px;background:#DCE6F5;border-radius:99px;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--orange);transition:width .4s}
+  .stage{position:relative;border-radius:18px;overflow:hidden;background:#0B1530;touch-action:none;user-select:none;-webkit-user-select:none}
+  canvas{display:block;width:100%;touch-action:none}
+  .aim{position:absolute;left:10px;top:10px;background:rgba(11,21,48,.75);color:#fff;font-weight:800;font-size:14px;border-radius:10px;padding:6px 10px;pointer-events:none}
+  .msg{font-size:15px;font-weight:700;color:var(--navy);background:#fff;border:2px solid var(--line);border-radius:14px;padding:12px 14px;min-height:48px;line-height:1.45}
+  .hint{font-size:14px;color:var(--ink2);background:#fff;border-radius:12px;padding:10px 12px;line-height:1.55;border:2px dashed var(--line)}
+  .math{font-family:"Times New Roman",serif;font-style:italic;font-size:1.08em}
+
+  .scrim{position:fixed;inset:0;background:rgba(15,24,48,.65);display:flex;align-items:flex-end;justify-content:center;z-index:10;padding:10px}
+  .sheet{background:#fff;width:100%;max-width:560px;border-radius:22px;padding:20px 18px 18px;display:flex;flex-direction:column;gap:12px;max-height:94vh;overflow:auto;animation:up .25s ease-out}
+  @keyframes up{from{transform:translateY(30px);opacity:0}}
+  .tag{align-self:flex-start;font-size:13px;font-weight:900;padding:5px 12px;border-radius:999px;background:#FFE8CC;color:#A33A07}
+  .sheet h3{margin:0;font-size:21px;line-height:1.4}
+  .answers{display:grid;gap:8px}
+  .ans{background:var(--sky);border:2px solid var(--line);border-radius:14px;padding:14px;text-align:left;font-size:17px;font-weight:700;color:var(--navy);min-height:52px}
+  .ans.right{background:#D3F9D8;border-color:var(--green)}
+  .ans.wrong{background:#FFE3E3;border-color:#C92A2A}
+  .explain{background:var(--cream);border:2px solid #F2C94C;border-radius:14px;padding:12px 14px;font-size:15px;line-height:1.55}
+  .stars{font-size:40px;letter-spacing:6px;color:#F59F00;text-align:center}
+  footer{margin-top:auto;text-align:center;font-size:12px;color:#5C6B85;padding-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <span class="lab">중앙로켓연구소 · 수학체험전</span>
+    <h1>미래성 공략 작전</h1>
+    <p>로켓을 당겨 쏴서 미래성을 무너뜨려라! 깃발을 떨어뜨릴 때마다 로켓 수학 문제가 나와요.</p>
+  </header>
+
+  <!-- 시작 -->
+  <section id="setup" class="card" style="display:flex;flex-direction:column;gap:16px">
+    <div>
+      <h2>난이도를 골라요</h2>
+      <div class="seg" role="group" aria-label="난이도">
+        <button class="opt" data-level="mid" aria-pressed="true">중학생<small>각도·삼각비</small></button>
+        <button class="opt" data-level="high" aria-pressed="false">고등학생<small>삼각함수·미분</small></button>
+      </div>
+    </div>
+    <div>
+      <h2>작전 방법</h2>
+      <ol class="rules">
+        <li>화면을 <b>누른 채 뒤로 당겼다가 놓으면</b> 발사! 당기는 방향이 각도, 당기는 길이가 세기예요.</li>
+        <li>너무 <b>위로</b> 쏘면 높이만 올라가고, 너무 <b>낮게</b> 쏘면 금방 땅에 떨어져요. 알맞은 각도를 찾아요!</li>
+        <li>성 위의 <b>깃발 3개</b>를 떨어뜨릴 때마다 로켓 문제! 맞히면 <b>강화 로켓</b>을 받아요.</li>
+        <li>성의 블록을 <b>모두</b> 부수면 작전 성공!</li>
+      </ol>
+    </div>
+    <button class="big" id="startBtn">작전 시작</button>
+  </section>
+
+  <!-- 게임 -->
+  <section id="game" class="hide" style="display:flex;flex-direction:column;gap:10px">
+    <div class="hud">
+      <div><b id="hShots">0</b><span>발사</span></div>
+      <div><b id="hFlags">3</b><span>남은 깃발</span></div>
+      <div><b id="hMega">0</b><span>강화 로켓</span></div>
+      <div><b id="hHp">100%</b><span>성 내구도</span></div>
+    </div>
+    <div class="bar" aria-hidden="true"><i id="hpBar" style="width:100%"></i></div>
+    <div class="stage" id="stage">
+      <canvas id="cv" aria-label="발사 화면. 누른 채 뒤로 당겼다 놓으면 로켓이 발사됩니다."></canvas>
+      <div class="aim hide" id="aim"></div>
+    </div>
+    <div class="msg" id="msg" aria-live="polite">화면을 누른 채 왼쪽 아래로 당겼다가 놓아 보세요!</div>
+    <div class="hint" id="hint"></div>
+    <button class="ghost" id="quitBtn">처음으로</button>
+  </section>
+
+  <footer>중앙기독고등학교 중앙로켓연구소 · 부스에서 진짜 에어로켓도 날려 보세요!</footer>
+</div>
+<div id="modalRoot"></div>
+
+<script>
+(() => {
+"use strict";
+
+/* ================= 문제 은행 ================= */
+const Q = {
+  mid: [
+    {q:"같은 세기로 쏠 때, 이론상 가장 멀리 날아가는 발사 각도는?",a:["30°","45°","60°","80°"],c:1,e:"공기 저항을 무시하면 45°에서 가장 멀리 날아가요."},
+    {q:"30°로 쏜 로켓과 같은 거리를 날아가는 각도는? (같은 세기)",a:["45°","50°","60°","70°"],c:2,e:"두 각도의 합이 90°이면 날아가는 거리가 같아요. 30° + 60° = 90°"},
+    {q:"20°로 쏜 로켓과 같은 거리를 날아가는 각도는? (같은 세기)",a:["40°","60°","70°","80°"],c:2,e:"20° + 70° = 90° 이므로 같은 거리를 날아가요."},
+    {q:"75°로 쏜 로켓과 같은 거리를 날아가는 각도는? (같은 세기)",a:["15°","25°","30°","45°"],c:0,e:"75° + 15° = 90° 이에요."},
+    {q:"같은 세기로 쏠 때, 가장 가까이 떨어지는 각도는?",a:["10°","30°","45°","60°"],c:0,e:"45°에서 멀어질수록 거리가 줄어요. 10°는 45°에서 가장 멀어요."},
+    {q:"sin 30°의 값은?",a:["1/2","√2/2","√3/2","1"],c:0,e:"sin 30° = 1/2"},
+    {q:"cos 60°의 값은?",a:["0","1/2","√3/2","1"],c:1,e:"cos 60° = 1/2 이에요. sin 30°와 같아요!"},
+    {q:"tan 45°의 값은?",a:["0","1/2","1","√3"],c:2,e:"45°인 직각삼각형은 밑변과 높이가 같아서 tan 45° = 1"},
+    {q:"sin 60°의 값은?",a:["1/2","√2/2","√3/2","√3"],c:2,e:"sin 60° = √3/2"},
+    {q:"cos 45°의 값은?",a:["1/2","√2/2","√3/2","1"],c:1,e:"cos 45° = √2/2"},
+    {q:"sin 90°의 값은?",a:["0","1/2","1","정의되지 않는다"],c:2,e:"sin 90° = 1"},
+    {q:"cos 0°의 값은?",a:["0","1/2","√2/2","1"],c:3,e:"cos 0° = 1"},
+    {q:"tan 값이 1보다 큰 각은?",a:["30°","40°","45°","60°"],c:3,e:"tan 60° = √3 ≈ 1.73 이에요. 45°보다 크면 tan 값이 1보다 커요."},
+    {q:"sin²30° + cos²30° 의 값은?",a:["1/2","1","√3/2","2"],c:1,e:"어떤 각이든 sin²A + cos²A = 1 이에요."},
+    {q:"빗변이 10 m이고 한 예각이 30°인 직각삼각형에서, 30°의 맞은편 변의 길이는?",a:["5 m","5√3 m","10 m","20 m"],c:0,e:"맞은편 변 = 빗변 × sin 30° = 10 × 1/2 = 5 m"},
+    {q:"빗변이 2 m이고 한 예각이 60°인 직각삼각형에서, 60°에 붙어 있는 밑변의 길이는?",a:["1 m","√2 m","√3 m","2 m"],c:0,e:"밑변 = 빗변 × cos 60° = 2 × 1/2 = 1 m"},
+    {q:"경사가 30°인 언덕길을 10 m 걸어 올라가면 높이는 얼마나 높아질까?",a:["3 m","5 m","5√3 m","10 m"],c:1,e:"높이 = 10 × sin 30° = 5 m"},
+    {q:"높이 5 m인 나무의 그림자가 5 m일 때, 태양이 땅과 이루는 각도는?",a:["30°","45°","60°","90°"],c:1,e:"tan A = 5/5 = 1 이므로 A = 45°"},
+    {q:"직각삼각형의 두 변이 3 m, 4 m일 때 빗변의 길이는?",a:["5 m","6 m","7 m","12 m"],c:0,e:"피타고라스 정리: 3² + 4² = 25 = 5²"},
+    {q:"삼각형의 세 내각의 합은?",a:["90°","180°","270°","360°"],c:1,e:"삼각형의 내각의 합은 항상 180°예요."},
+    {q:"로켓이 가장 높은 지점에 있을 때, 위아래 방향 속도는?",a:["가장 빠르다","0이다","항상 음수다","알 수 없다"],c:1,e:"올라가던 속도가 0이 되는 순간이 가장 높은 지점이에요."},
+    {q:"로켓이 날아가는 길(궤적)과 같은 모양의 그래프는?",a:["일차함수","이차함수(포물선)","원","직선"],c:1,e:"공기 저항을 무시하면 로켓은 포물선을 그리며 날아가요."},
+    {q:"y = −x² + 4 의 최댓값은?",a:["0","2","4","16"],c:2,e:"−x² ≤ 0 이므로 x = 0일 때 최댓값 4"},
+    {q:"y = x² 의 그래프의 꼭짓점은?",a:["(0, 0)","(1, 1)","(0, 1)","(1, 0)"],c:0,e:"y = x²의 꼭짓점은 원점 (0, 0)이에요."},
+    {q:"로켓이 2초 동안 8 m를 날아갔다면 평균 속력은?",a:["2 m/s","4 m/s","6 m/s","16 m/s"],c:1,e:"속력 = 거리 ÷ 시간 = 8 ÷ 2 = 4 m/s"},
+    {q:"시속 36 km는 초속 몇 m일까?",a:["3.6 m/s","10 m/s","36 m/s","60 m/s"],c:1,e:"36000 m ÷ 3600초 = 10 m/s"},
+    {q:"같은 세기로 쏠 때, 발사 각도를 크게 하면 최고 높이는?",a:["낮아진다","높아진다","변하지 않는다","0이 된다"],c:1,e:"각도가 클수록 위로 향하는 속도가 커져서 더 높이 올라가요."},
+    {q:"공기 저항을 무시할 때, 날아가는 로켓을 아래로 끌어당기는 힘은?",a:["마찰력","탄성력","중력","자기력"],c:2,e:"공중에서는 중력이 로켓을 계속 아래로 끌어당겨요."},
+    {q:"주사기 에어로켓을 날리는 힘은 무엇을 이용한 걸까?",a:["압축된 공기","전기","자석","빛"],c:0,e:"주사기로 공기를 압축했다가 한 번에 밀어내는 힘으로 날아가요."},
+    {q:"각도기 하나로 잴 수 있는 각의 범위는 보통?",a:["0°~90°","0°~180°","0°~270°","0°~360°"],c:1,e:"반원 각도기는 0°부터 180°까지 잴 수 있어요."}
+  ],
+  high: [
+    {q:"R(θ) = v² sin 2θ / g 가 최대가 되는 θ는? (0° < θ < 90°)",a:["30°","45°","60°","90°"],c:1,e:"sin 2θ가 최대(=1)일 때 2θ = 90°, 즉 θ = 45°"},
+    {q:"d/dθ (sin 2θ) = ?",a:["cos 2θ","2cos 2θ","−2cos 2θ","2sin θ"],c:1,e:"합성함수 미분: (sin 2θ)′ = cos 2θ · 2 = 2cos 2θ"},
+    {q:"sin 2θ와 같은 식은?",a:["2sin θ","sin²θ + cos²θ","2sin θ cos θ","cos²θ − sin²θ"],c:2,e:"배각공식: sin 2θ = 2sin θ cos θ"},
+    {q:"cos 2θ와 같은 식은?",a:["2cos θ","1 − 2sin²θ","2sin θ cos θ","sin²θ − cos²θ"],c:1,e:"cos 2θ = cos²θ − sin²θ = 1 − 2sin²θ"},
+    {q:"2sin 15° cos 15° 의 값은?",a:["1/4","1/2","√3/2","1"],c:1,e:"2sin 15° cos 15° = sin 30° = 1/2"},
+    {q:"sin 75° 의 값은?",a:["(√6 − √2)/4","(√6 + √2)/4","√3/2","(√3 + 1)/2"],c:1,e:"sin(45° + 30°) = sin45°cos30° + cos45°sin30° = (√6 + √2)/4"},
+    {q:"45°를 라디안으로 나타내면?",a:["π/6","π/4","π/3","π/2"],c:1,e:"180° = π 이므로 45° = π/4"},
+    {q:"y = sin x 의 주기는?",a:["π/2","π","2π","4π"],c:2,e:"sin x는 2π마다 같은 값이 반복돼요."},
+    {q:"tan θ 와 같은 식은?",a:["cos θ / sin θ","sin θ / cos θ","sin θ · cos θ","1 / sin θ"],c:1,e:"tan θ = sin θ / cos θ"},
+    {q:"h(t) = 20t − 5t² (m) 일 때, 가장 높은 순간의 시각은?",a:["1초","2초","4초","5초"],c:1,e:"h′(t) = 20 − 10t = 0 → t = 2초"},
+    {q:"h(t) = 20t − 5t² (m) 의 최고 높이는?",a:["10 m","15 m","20 m","40 m"],c:2,e:"h(2) = 40 − 20 = 20 m"},
+    {q:"h(t) = 20t − 5t² (m) 일 때, 다시 땅에 닿는 시각은? (t > 0)",a:["2초","3초","4초","5초"],c:2,e:"5t(4 − t) = 0 → t = 4초"},
+    {q:"h(t) = 30t − 5t² (m) 일 때, t = 1에서 위쪽 방향 속도는?",a:["10 m/s","20 m/s","25 m/s","30 m/s"],c:1,e:"h′(t) = 30 − 10t → h′(1) = 20 m/s"},
+    {q:"위치 x(t) = t³ − 6t² 일 때, t = 2에서의 속도는?",a:["−12","−8","0","12"],c:0,e:"x′(t) = 3t² − 12t → x′(2) = 12 − 24 = −12"},
+    {q:"가속도는 속도를 어떻게 한 것일까?",a:["적분한 것","미분한 것","제곱한 것","역수를 취한 것"],c:1,e:"속도를 시간에 대해 미분하면 가속도예요."},
+    {q:"y = x³ − 3x 가 극댓값을 갖는 x는?",a:["−1","0","1","3"],c:0,e:"y′ = 3x² − 3 = 0 → x = ±1, y″ = 6x 가 x = −1에서 음수라서 극대"},
+    {q:"f(θ) = sin 2θ 에서 f″(45°)의 부호는?",a:["양수","음수","0","알 수 없다"],c:1,e:"f″(θ) = −4sin 2θ → f″(45°) = −4 < 0 이므로 45°에서 극대!"},
+    {q:"d/dx (cos x) = ?",a:["sin x","−sin x","cos x","−cos x"],c:1,e:"(cos x)′ = −sin x"},
+    {q:"d/dx (tan x) = ?",a:["sec²x","−sec²x","cot x","sin x"],c:0,e:"(tan x)′ = sec²x = 1/cos²x"},
+    {q:"lim (x→0) sin x / x 의 값은?",a:["0","1/2","1","∞"],c:2,e:"삼각함수 미분의 출발점이 되는 극한: 값은 1"},
+    {q:"20°로 쏜 로켓과 같은 거리를 가는 각도는? (같은 속력)",a:["40°","60°","70°","80°"],c:2,e:"sin 2θ = sin(180° − 2θ) 이므로 θ와 90° − θ는 거리가 같아요."},
+    {q:"R(θ) = 10 sin 2θ (m) 에서 R = 5 m가 되는 θ는? (0° < θ ≤ 45°)",a:["15°","30°","45°","60°"],c:0,e:"sin 2θ = 1/2 → 2θ = 30° → θ = 15°"},
+    {q:"v = 10 m/s, g = 10 m/s², θ = 45° 일 때 도달 거리 R은?",a:["5 m","10 m","14 m","20 m"],c:1,e:"R = v² sin 2θ / g = 100 × 1 / 10 = 10 m"},
+    {q:"v = 10 m/s, g = 10 m/s², θ = 30° 일 때 도달 거리 R은?",a:["5 m","5√3 m","10 m","10√3 m"],c:1,e:"R = 100 × sin 60° / 10 = 10 × √3/2 = 5√3 m"},
+    {q:"v = 10 m/s, g = 10 m/s², θ = 30° 일 때 비행 시간은?",a:["0.5초","1초","√3초","2초"],c:1,e:"T = 2v sin θ / g = 2 × 10 × 1/2 / 10 = 1초"},
+    {q:"v = 10 m/s 로 똑바로 위로(90°) 쏘면 최고 높이는? (g = 10 m/s²)",a:["2.5 m","5 m","10 m","20 m"],c:1,e:"H = v² sin²θ / 2g = 100 / 20 = 5 m"},
+    {q:"발사 속력을 2배로 하면 도달 거리 R은? (각도 같음)",a:["2배","4배","1/2배","변하지 않음"],c:1,e:"R = v² sin 2θ / g 에서 R은 v²에 비례해요."},
+    {q:"중력이 지구의 1/6인 달에서 쏘면 도달 거리 R은? (같은 속력·각도)",a:["1/6배","변하지 않음","6배","36배"],c:2,e:"R은 g에 반비례하므로 6배!"},
+    {q:"발사 속도 v, 각도 θ일 때 속도의 수평 성분은?",a:["v sin θ","v cos θ","v tan θ","v / cos θ"],c:1,e:"수평 = v cos θ, 수직 = v sin θ"},
+    {q:"공기 저항을 무시할 때, 포물선 운동에서 수평 방향 가속도는?",a:["0","g","−g","시간에 따라 증가"],c:0,e:"수평 방향으로는 힘이 없어서 속도가 일정해요."},
+    {q:"공기 저항이 있으면, 같은 높이에서 쏠 때 가장 멀리 가는 각도는 보통?",a:["45°보다 작다","정확히 45°","45°보다 크다","90°"],c:0,e:"공기 저항 때문에 오래 떠 있을수록 손해라서, 보통 45°보다 조금 낮은 각도가 유리해요."},
+    {q:"R(θ) = v² sin 2θ / g 의 그래프는 θ = 45°를 기준으로 어떤 모양일까?",a:["좌우 대칭","원점 대칭","계속 증가","계속 감소"],c:0,e:"sin 2θ = sin 2(90° − θ) 이므로 θ = 45°를 기준으로 대칭이에요."}
+  ]
+};
+
+/* ================= 상수 ================= */
+const WM = 30;            // 화면 가로 (m)
+const G = 9.8;
+const VMAX = 17;          // 최대 발사 속력 (m/s) → 평지 최대 거리 ≈ 29.5 m
+const LX = 1.6, LY = 0.6; // 발사대 위치 (m)
+const B = 1.5;            // 블록 크기 (m)
+const CX = 17.5;          // 성 시작 x (m)
+const HEIGHTS = [3,5,3,6,3,5,3];
+const FLAG_COLS = [1,3,5];
+const R_NORMAL = 1.9, R_MEGA = 3.4;
+const TIME_SCALE = 1.7;
+
+/* ================= 상태 ================= */
+let level = "mid", deck = [];
+let cols, flags, total, shots, mega, quizRight, quizTotal;
+let state = "setup";      // aim | fly | settle | quiz | won
+let drag = null, rocket = null, lastTrail = [], trail = [], particles = [], shake = 0;
+let lastAngle = 0, stars = [];
+let W = 0, H = 0, SC = 1, GROUND = 0, dpr = 1;
+
+const $ = s => document.querySelector(s);
+const cv = $("#cv"), ctx = cv.getContext("2d");
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const shuffle = a => { a = a.slice(); for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const X = m => m*SC;
+const Y = m => H - GROUND - m*SC;
+
+/* ================= 시작 ================= */
+document.querySelectorAll("[data-level]").forEach(b => b.addEventListener("click", () => {
+  level = b.dataset.level;
+  document.querySelectorAll("[data-level]").forEach(x => x.setAttribute("aria-pressed", x === b));
+}));
+$("#startBtn").addEventListener("click", start);
+$("#quitBtn").addEventListener("click", () => { closeModal(); state="setup"; $("#game").classList.add("hide"); $("#setup").classList.remove("hide"); });
+
+function start(){
+  deck = shuffle(Q[level]);
+  cols = HEIGHTS.map((h,c) => Array.from({length:h}, (_,i) => ({y:i*B, ty:i*B, shade: (c*7+i*3)%4})));
+  total = HEIGHTS.reduce((a,b)=>a+b,0);
+  flags = FLAG_COLS.map(c => ({c, h0: HEIGHTS[c], down:false, fall:null}));
+  shots = 0; mega = 0; quizRight = 0; quizTotal = 0;
+  rocket = null; trail = []; lastTrail = []; particles = [];
+  stars = Array.from({length:40}, () => ({x:Math.random()*WM, y:6+Math.random()*16, r:Math.random()*1.2+0.4}));
+  $("#setup").classList.add("hide"); $("#game").classList.remove("hide");
+  $("#hint").innerHTML = level==="high"
+    ? `발사 속력 <span class="math">v</span>일 때 평지 도달 거리는 <span class="math">R</span> = <span class="math">v</span>² sin 2<span class="math">θ</span> / <span class="math">g</span>. 성까지 약 ${(CX-LX).toFixed(0)}~${(CX+HEIGHTS.length*B-LX).toFixed(0)} m! 최대 세기에서 닿을 수 있는 각도 범위를 생각해 보세요.`
+    : `성까지 약 ${(CX-LX).toFixed(0)} m. 45° 근처에서 가장 멀리 날아가요. 너무 세우거나 너무 눕히면 성에 닿지 않아요!`;
+  resize(); state = "aim"; setMsg("화면을 누른 채 왼쪽 아래로 당겼다가 놓아 보세요!"); hud();
+}
+
+function remaining(){ return cols.reduce((a,c)=>a+c.length,0); }
+function hud(){
+  $("#hShots").textContent = shots;
+  $("#hFlags").textContent = flags.filter(f=>!f.down).length;
+  $("#hMega").textContent = mega;
+  const p = Math.round(remaining()/total*100);
+  $("#hHp").textContent = p+"%"; $("#hpBar").style.width = p+"%";
+}
+function setMsg(t){ $("#msg").textContent = t; }
+
+/* ================= 화면 크기 ================= */
+function resize(){
+  const w = $("#stage").clientWidth || 360;
+  dpr = Math.max(1, window.devicePixelRatio||1);
+  W = w; H = Math.round(Math.min(w*0.66, window.innerHeight*0.62));
+  if (H < 240) H = 240;
+  cv.width = W*dpr; cv.height = H*dpr; cv.style.height = H+"px";
+  SC = W/WM; GROUND = Math.max(22, H*0.08);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+window.addEventListener("resize", () => { if (state!=="setup") resize(); });
+
+/* ================= 조준 (당겼다 놓기) ================= */
+const MAXPULL = () => Math.max(90, W*0.3);
+function pt(e){ const r = cv.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; }
+function aimInfo(){
+  if (!drag) return null;
+  let px = drag.sx - drag.cx, py = drag.cy - drag.sy;   // 당긴 반대 방향 = 발사 방향 (위쪽이 +)
+  const len = Math.hypot(px, py);
+  let ang = Math.atan2(py, px) * 180/Math.PI;
+  ang = Math.max(0, Math.min(89, ang));
+  const pow = Math.min(1, len / MAXPULL());
+  return {ang, pow, len};
+}
+cv.addEventListener("pointerdown", e => {
+  if (state!=="aim") return;
+  const p = pt(e); drag = {sx:p.x, sy:p.y, cx:p.x, cy:p.y};
+  cv.setPointerCapture(e.pointerId); e.preventDefault();
+});
+cv.addEventListener("pointermove", e => {
+  if (!drag) return; const p = pt(e); drag.cx = p.x; drag.cy = p.y;
+  const a = aimInfo(); const el = $("#aim");
+  if (a.pow > 0.08){ el.classList.remove("hide"); el.textContent = `각도 ${Math.round(a.ang)}° · 세기 ${Math.round(a.pow*100)}%`; }
+});
+function release(){
+  if (!drag) return;
+  const a = aimInfo(); drag = null; $("#aim").classList.add("hide");
+  if (!a || a.pow < 0.15){ setMsg("조금 더 길게 당겨야 발사돼요!"); return; }
+  fire(a.ang, a.pow);
+}
+cv.addEventListener("pointerup", release);
+cv.addEventListener("pointercancel", () => { drag = null; $("#aim").classList.add("hide"); });
+
+function fire(ang, pow){
+  const r = ang*Math.PI/180, v = VMAX*pow;
+  const isMega = mega > 0; if (isMega) mega--;
+  rocket = {x:LX, y:LY, vx:v*Math.cos(r), vy:v*Math.sin(r), mega:isMega, maxY:LY};
+  lastAngle = ang; lastTrail = trail; trail = [];
+  shots++; state = "fly"; hud();
+  setMsg(`발사! 각도 ${Math.round(ang)}°, 세기 ${Math.round(pow*100)}%${isMega?" · 강화 로켓!":""}`);
+}
+
+/* ================= 충돌 · 폭발 ================= */
+function hitCell(x, y){
+  const c = Math.floor((x - CX)/B);
+  if (c < 0 || c >= cols.length) return false;
+  return y < cols[c].length*B && y >= 0;
+}
+function explode(x, y, rad){
+  let n = 0;
+  cols.forEach((col, c) => {
+    for (let i = col.length-1; i >= 0; i--){
+      const bx = CX + c*B + B/2, by = col[i].ty + B/2;
+      if (Math.hypot(bx-x, by-y) <= rad){ col.splice(i,1); n++; burst(bx, by, 10, "#63E6BE"); }
+    }
+    col.forEach((b,i) => b.ty = i*B);   // 위 블록은 아래로 무너짐
+  });
+  burst(x, y, rad>2.5?46:26, "#FFD43B"); burst(x, y, 14, "#FF922B");
+  shake = rad>2.5 ? 14 : 8;
+  return n;
+}
+function burst(x, y, n, color){
+  for (let i=0;i<n;i++){
+    const a = Math.random()*Math.PI*2, s = 2+Math.random()*7;
+    particles.push({x, y, vx:Math.cos(a)*s, vy:Math.sin(a)*s+2, life:1, color, r:2+Math.random()*3});
+  }
+}
+
+async function afterShot(result){
+  state = "settle"; lastTrail = trail.slice();
+  if (result.hit){
+    setMsg(result.n ? `명중! 블록 ${result.n}개 파괴!${result.mega?" (강화 로켓)":""}` : "명중!");
+  } else {
+    let t;
+    if (result.x < CX){
+      if (lastAngle >= 58) t = `너무 위로 쐈어요! 높이만 올라가고 성까지 못 갔어요. 각도를 낮춰 보세요. (이번 ${Math.round(lastAngle)}°)`;
+      else if (lastAngle <= 27) t = `너무 낮게 쐈어요! 금방 땅에 떨어졌어요. 각도를 높여 보세요. (이번 ${Math.round(lastAngle)}°)`;
+      else t = `각도는 좋아요(${Math.round(lastAngle)}°)! 조금 더 세게 당겨 보세요.`;
+    } else t = "성을 넘어가 버렸어요! 조금 약하게 당기거나 낮게 쏴 보세요.";
+    setMsg(t);
+  }
+  hud();
+  await sleep(700);
+
+  // 깃발 확인
+  const fallen = flags.filter(f => !f.down && cols[f.c].length < f.h0);
+  for (const f of fallen){ f.down = true; f.fall = {t:0, x:CX+f.c*B+B/2, y:f.h0*B}; }
+  hud();
+  for (let i=0;i<fallen.length;i++){
+    await sleep(700);
+    state = "quiz";
+    await quiz(flags.filter(f=>f.down).length - (fallen.length-1-i));
+  }
+  if (remaining() === 0){ state = "won"; await sleep(400); return win(); }
+  state = "aim";
+}
+
+/* ================= 퀴즈 ================= */
+function openModal(html){ const r = $("#modalRoot"); r.innerHTML = `<div class="scrim"><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`; return r.querySelector(".sheet"); }
+function closeModal(){ $("#modalRoot").innerHTML = ""; }
+function quiz(flagNo){
+  return new Promise(resolve => {
+    if (!deck.length) deck = shuffle(Q[level]);
+    const item = deck.pop();
+    const order = shuffle(item.a.map((x,i)=>i));
+    const s = openModal(`
+      <span class="tag">깃발 ${flagNo}/3 격추! · 로켓 문제</span>
+      <h3>${item.q}</h3>
+      <div class="answers">${order.map(i=>`<button class="ans" data-i="${i}">${item.a[i]}</button>`).join("")}</div>
+      <div class="explain hide" id="exp"></div>
+      <button class="big hide" id="next">작전 계속</button>`);
+    s.querySelectorAll(".ans").forEach(btn => btn.addEventListener("click", () => {
+      const ok = +btn.dataset.i === item.c; quizTotal++;
+      s.querySelectorAll(".ans").forEach(b => { b.disabled = true; if (+b.dataset.i === item.c) b.classList.add("right"); });
+      if (!ok) btn.classList.add("wrong"); else { quizRight++; mega++; }
+      const e = s.querySelector("#exp"); e.classList.remove("hide");
+      e.innerHTML = `<b>${ok ? "정답! 강화 로켓 1개 획득 (폭발 범위 UP)" : "아쉬워요! 강화 로켓은 다음 기회에"}</b><br>${item.e}`;
+      const nx = s.querySelector("#next"); nx.classList.remove("hide"); nx.focus();
+      hud();
+    }));
+    s.querySelector("#next").addEventListener("click", () => { closeModal(); resolve(); });
+  });
+}
+
+/* ================= 승리 ================= */
+function win(){
+  const st = shots <= 7 ? 3 : shots <= 11 ? 2 : 1;
+  const s = openModal(`
+    <span class="tag" style="background:var(--yellow);color:var(--navy)">작전 성공</span>
+    <div class="stars" aria-label="별 ${st}개">${"★".repeat(st)}${"☆".repeat(3-st)}</div>
+    <h3>미래성 완전 함락!</h3>
+    <p style="margin:0;font-size:16px;color:var(--ink2);line-height:1.6">로켓 ${shots}발 · 로켓 문제 ${quizRight}/${quizTotal} 정답</p>
+    <div class="explain">이제 부스에서 <b>진짜 에어로켓</b>으로 각도의 비밀을 확인해 보세요! 실제로는 공기 저항 때문에 결과가 조금 다를 수 있어요.</div>
+    <button class="big" id="again">다시 도전</button>`);
+  s.querySelector("#again").addEventListener("click", () => { closeModal(); start(); });
+}
+
+/* ================= 물리 + 그리기 루프 ================= */
+let prev = performance.now();
+function loop(now){
+  const dt = Math.min(0.05, (now - prev)/1000); prev = now;
+  if (state !== "setup") { step(dt); draw(); }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+function step(dt){
+  // 로켓
+  if (state === "fly" && rocket){
+    const sub = 8, h = dt*TIME_SCALE/sub;
+    for (let i=0;i<sub && rocket;i++){
+      rocket.vy -= G*h; rocket.x += rocket.vx*h; rocket.y += rocket.vy*h;
+      rocket.maxY = Math.max(rocket.maxY, rocket.y);
+      if (i%2===0) trail.push([rocket.x, rocket.y]);
+      if (hitCell(rocket.x, rocket.y)){
+        const m = rocket.mega, n = explode(rocket.x, rocket.y, m?R_MEGA:R_NORMAL);
+        rocket = null; afterShot({hit:true, n, mega:m}); break;
+      }
+      if (rocket.y <= 0){
+        burst(rocket.x, 0.1, 12, "#ADB5BD"); shake = 4;
+        const x = rocket.x; rocket = null; afterShot({hit:false, x}); break;
+      }
+      if (rocket.x > WM + 3){ const x = rocket.x; rocket = null; afterShot({hit:false, x}); break; }
+    }
+  }
+  // 블록 낙하
+  cols.forEach(col => col.forEach(b => { if (b.y > b.ty) b.y = Math.max(b.ty, b.y - dt*9); }));
+  // 깃발 낙하
+  flags.forEach(f => { if (f.fall){ f.fall.t += dt; } });
+  // 파편
+  particles.forEach(p => { p.vy -= G*dt*0.8; p.x += p.vx*dt; p.y += p.vy*dt; p.life -= dt*1.4; });
+  particles = particles.filter(p => p.life > 0);
+  shake = Math.max(0, shake - dt*30);
+}
+
+function draw(){
+  ctx.save();
+  ctx.clearRect(0,0,W,H);
+  if (shake) ctx.translate((Math.random()-.5)*shake, (Math.random()-.5)*shake);
+  // 하늘
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,"#0B1530"); g.addColorStop(1,"#3A4F80");
+  ctx.fillStyle = g; ctx.fillRect(-20,-20,W+40,H+40);
+  ctx.fillStyle = "rgba(255,255,255,.8)";
+  stars.forEach(s => { ctx.beginPath(); ctx.arc(X(s.x), Y(s.y), s.r, 0, Math.PI*2); ctx.fill(); });
+  // 행성
+  ctx.fillStyle = "rgba(255,212,59,.18)"; ctx.beginPath(); ctx.arc(X(25), Y(17), SC*2.2, 0, Math.PI*2); ctx.fill();
+  // 땅
+  ctx.fillStyle = "#2B2440"; ctx.fillRect(-20, Y(0), W+40, GROUND+20);
+  ctx.fillStyle = "#4C3F6B"; ctx.fillRect(-20, Y(0), W+40, 4);
+  // 거리 눈금 (5 m마다)
+  ctx.fillStyle = "rgba(255,255,255,.55)"; ctx.font = "11px sans-serif"; ctx.textAlign = "center";
+  for (let m=5; m<WM; m+=5){ ctx.fillRect(X(LX+m)-1, Y(0)+4, 2, 6); ctx.fillText(m+"m", X(LX+m), Y(0)+20); }
+
+  // 지난 궤적
+  dots(lastTrail, "rgba(255,255,255,.28)");
+  dots(trail, "rgba(255,212,59,.7)");
+
+  drawCastle();
+  drawFlags();
+  drawLauncher();
+
+  // 로켓 비행
+  if (rocket){
+    const a = Math.atan2(rocket.vy, rocket.vx);
+    drawRocket(X(rocket.x), Y(rocket.y), -a, rocket.mega, true);
+    if (rocket.y > (H-GROUND)/SC){ // 화면 위로 나감
+      ctx.fillStyle = "#FFD43B"; ctx.beginPath(); ctx.moveTo(X(rocket.x), 4); ctx.lineTo(X(rocket.x)-7, 16); ctx.lineTo(X(rocket.x)+7, 16); ctx.fill();
+    }
+  }
+  // 파편
+  particles.forEach(p => { ctx.globalAlpha = Math.max(0,p.life); ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), p.r, 0, Math.PI*2); ctx.fill(); });
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+function dots(arr, color){
+  ctx.fillStyle = color;
+  for (let i=0;i<arr.length;i+=3){ ctx.beginPath(); ctx.arc(X(arr[i][0]), Y(arr[i][1]), 2, 0, Math.PI*2); ctx.fill(); }
+}
+
+function drawCastle(){
+  // 기단
+  ctx.fillStyle = "#1A1530"; ctx.fillRect(X(CX)-4, Y(0)-3, X(HEIGHTS.length*B)+8, 6);
+  const fills = ["#22355E","#263C69","#1F3157","#2A4272"];
+  cols.forEach((col, c) => col.forEach((b, i) => {
+    const x = X(CX + c*B), y = Y(b.y + B), s = X(B);
+    ctx.fillStyle = fills[b.shade]; ctx.fillRect(x+1, y+1, s-2, s-2);
+    ctx.strokeStyle = "#63E6BE"; ctx.lineWidth = 1.5; ctx.strokeRect(x+1.5, y+1.5, s-3, s-3);
+    if ((c+i)%2===0){ ctx.fillStyle = "rgba(99,230,190,.55)"; ctx.fillRect(x+s*0.35, y+s*0.3, s*0.3, s*0.35); }
+    if (i === col.length-1){ // 꼭대기 장식
+      ctx.fillStyle = "#63E6BE"; ctx.fillRect(x+s*0.15, y-3, s*0.2, 3); ctx.fillRect(x+s*0.65, y-3, s*0.2, 3);
+    }
+  }));
+}
+
+function drawFlags(){
+  flags.forEach(f => {
+    let bx, by, rot = 0, alpha = 1;
+    if (!f.down){ bx = CX + f.c*B + B/2; by = cols[f.c].length*B; }
+    else if (f.fall){
+      const t = f.fall.t; bx = f.fall.x + t*1.5; by = f.fall.y - 4.9*t*t; rot = t*3; alpha = Math.max(0, 1 - t/1.4);
+      if (alpha <= 0) return;
+    } else return;
+    ctx.save(); ctx.globalAlpha = alpha; ctx.translate(X(bx), Y(by)); ctx.rotate(rot);
+    const ph = SC*2;
+    ctx.strokeStyle = "#E9ECEF"; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-ph); ctx.stroke();
+    ctx.fillStyle = "#FFD43B"; ctx.beginPath(); ctx.moveTo(0,-ph); ctx.lineTo(SC*1.3,-ph+SC*0.45); ctx.lineTo(0,-ph+SC*0.9); ctx.fill();
+    ctx.fillStyle = "#D9480F"; ctx.beginPath(); ctx.arc(SC*0.42, -ph+SC*0.45, SC*0.16, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  });
+}
+
+function drawLauncher(){
+  const bx = X(LX), by = Y(LY);
+  // 받침대
+  ctx.fillStyle = "#495057"; ctx.fillRect(bx-14, Y(0)-6, 28, 6);
+  ctx.strokeStyle = "#ADB5BD"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(bx-10, Y(0)-6); ctx.lineTo(bx, by); ctx.lineTo(bx+10, Y(0)-6); ctx.stroke();
+  if (state !== "aim") return;
+  const a = aimInfo();
+  if (a && a.pow > 0.05){
+    const r = a.ang*Math.PI/180, pull = a.pow*Math.max(40, SC*3.2);
+    const rx = bx - Math.cos(r)*pull, ry = by + Math.sin(r)*pull;
+    // 고무줄
+    ctx.strokeStyle = "#FF922B"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(bx-8, by-4); ctx.lineTo(rx, ry); ctx.lineTo(bx+8, by+4); ctx.stroke();
+    // 방향 화살표 (짧게)
+    const al = 26 + a.pow*30;
+    ctx.strokeStyle = "rgba(255,255,255,.85)"; ctx.lineWidth = 2; ctx.setLineDash([5,5]);
+    ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx+Math.cos(r)*al, by-Math.sin(r)*al); ctx.stroke(); ctx.setLineDash([]);
+    // 각도 호
+    ctx.strokeStyle = "#FFD43B"; ctx.beginPath(); ctx.arc(bx, by, 20, -r, 0); ctx.stroke();
+    drawRocket(rx, ry, -r, mega>0, false);
+  } else {
+    drawRocket(bx, by, -Math.PI/4, mega>0, false);
+  }
+}
+
+function drawRocket(x, y, rot, isMega, flame){
+  const s = Math.max(0.8, SC/12) * (isMega ? 1.3 : 1);
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(s, s);
+  if (flame){
+    ctx.fillStyle = isMega ? "#FF6B6B" : "#FF922B";
+    ctx.beginPath(); ctx.moveTo(-9,-4); ctx.lineTo(-20 - Math.random()*8, 0); ctx.lineTo(-9,4); ctx.fill();
+  }
+  if (isMega){ ctx.shadowColor = "#FFD43B"; ctx.shadowBlur = 14; }
+  ctx.fillStyle = isMega ? "#FFD43B" : "#F1F3F5";
+  ctx.beginPath(); ctx.moveTo(14,0); ctx.quadraticCurveTo(6,-6,-9,-5); ctx.lineTo(-9,5); ctx.quadraticCurveTo(6,6,14,0); ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "#D9480F";
+  ctx.beginPath(); ctx.moveTo(-9,-5); ctx.lineTo(-13,-9); ctx.lineTo(-5,-5); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-9,5); ctx.lineTo(-13,9); ctx.lineTo(-5,5); ctx.fill();
+  ctx.fillStyle = "#1971C2"; ctx.beginPath(); ctx.arc(3,0,2.6,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+})();
+</script>
+</body>
+</html>
